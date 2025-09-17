@@ -1,0 +1,9 @@
+.venv/
+%temp/
+**/__pycache__/
+bot/data/users/
+bot/data/token.txt
+*.bat
+*.txt
+*.psd
+**/responses/

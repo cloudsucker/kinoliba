@@ -1,0 +1,12 @@
+from bot.conversation.handler import is_it_yes
+from bot.conversation.handler import get_random_already_in_list_response
+from bot.conversation.handler import get_random_whats_viewed_response
+from bot.conversation.handler import get_random_not_found_in_list_response
+from bot.conversation.handler import get_random_recommendation_response
+from bot.conversation.handler import get_random_what_you_wanna_add
+from bot.conversation.handler import get_random_content_not_found
+from bot.conversation.handler import get_random_what_you_wanna_search
+from bot.conversation.handler import get_random_what_you_wanna_delete
+
+
+from bot.conversation.messages_creator.search import create_message_founded

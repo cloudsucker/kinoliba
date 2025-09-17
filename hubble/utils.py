@@ -1,0 +1,9 @@
+BASE_URL = "http://127.0.0.1:8080/"
+
+SEARCH_URL = BASE_URL + "search"
+INFO_URL = BASE_URL + "info"
+SIMILARS_URL = BASE_URL + "similars"
+PERSON_URL = BASE_URL + "person"
+TRIVIAS_URL = BASE_URL + "trivias"
+MEDIA_POSTS_URL = BASE_URL + "media_posts"
+SERIES_DATES_URL = BASE_URL + "series_dates"
