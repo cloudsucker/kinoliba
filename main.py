@@ -2,7 +2,7 @@ import asyncio
 from aiogram import Bot, Dispatcher
 
 from bot.data import get_token
-from bot.data.passphrase import PassphraseMiddleware
+from bot.passphrase import PassphraseMiddleware
 from bot.commands import start, add, delete, search, my_list, help, viewed, share, dates
 
 
