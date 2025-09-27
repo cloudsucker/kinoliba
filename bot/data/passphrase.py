@@ -1,6 +1,6 @@
 from aiogram import BaseMiddleware
 from aiogram.types import Message
-from bot.data import get_passphrase
+from bot.data.handler import get_passphrase
 
 
 PASSPHRASE = get_passphrase()
