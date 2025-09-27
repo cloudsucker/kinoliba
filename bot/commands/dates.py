@@ -1,4 +1,5 @@
 import locale
+import platform
 import datetime
 import re
 
@@ -10,8 +11,16 @@ from hubble.getters import get_series_dates
 
 router = Router()
 
+
 # SET LOCALE FOR RUSSIAN MONTHS NAMING
-locale.setlocale(locale.LC_TIME, "Russian_Russia.1251")
+try:
+    if platform.system() == "Windows":
+        locale.setlocale(locale.LC_TIME, "Russian_Russia.1251")
+    else:
+        locale.setlocale(locale.LC_TIME, "ru_RU.UTF-8")
+except locale.Error:
+    print("Warning: locale not found, using default")
+
 
 months_genitive = {
     "январь": "января",
