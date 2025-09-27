@@ -8,6 +8,8 @@ USER_DATA_PATH = DATA_PATH + "users/"
 TOKEN_FILEPATH = DATA_PATH + "token.txt"
 CURRENT_USER_DATA_FILEPATH_TEMPLATE = USER_DATA_PATH + "{}.json"
 
+if not os.path.exists(USER_DATA_PATH):
+    os.mkdir(USER_DATA_PATH)
 
 # = = = = = = = = = = = = = = = = BOT_TOKEN GETTER = = = = = = = = = = = = = = = = =
 
@@ -188,8 +190,11 @@ def get_users_recommends(conversation_id: int) -> dict[str:list]:
 def is_this_content_already_recommend(
     conversation_id: int, content_type: str, content_id: int
 ) -> bool:
-    user_recommends = get_users_recommends(conversation_id).get(content_type, [])
-    if user_recommends:
+    user_recommends = get_users_recommends(conversation_id)
+    if not user_recommends:
+        return False
+    user_current_content_type_recommends = user_recommends.get(content_type, [])
+    if user_current_content_type_recommends:
         return content_id in get_users_recommends(conversation_id).get(content_type)
     return False
 
