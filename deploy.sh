@@ -29,7 +29,6 @@ if [ ! -f "$PASSPHRASE_FILE" ]; then
   while true; do
     read -p "Please enter a passphrase for the bot: " PASS1
     read -p "Confirm passphrase: " PASS2
-    
     if [ "$PASS1" = "$PASS2" ] && [ -n "$PASS1" ]; then
       echo "$PASS1" > "$PASSPHRASE_FILE"
       chmod 600 "$PASSPHRASE_FILE"
@@ -41,10 +40,10 @@ if [ ! -f "$PASSPHRASE_FILE" ]; then
   done
 fi
 
-# ===== ENSURE PERMISSIONS =====
-# Делаем владельцем текущего пользователя
-sudo chown -R $(whoami):$(whoami) "$PROJECT_DIR/bot/data"
-chmod 600 "$PROJECT_DIR/bot/data/passphrase.txt" "$PROJECT_DIR/bot/data/token.txt"
+# ===== ENSURE OWNERSHIP =====
+# Все файлы бота принадлежат текущему пользователю
+chown -R $(whoami):$(whoami) "$PROJECT_DIR/bot"
+chmod 700 "$PROJECT_DIR/bot/data"
 
 # ===== UPDATE CODE =====
 echo "Updating codebase from GitHub..."
@@ -53,13 +52,11 @@ git pull origin production
 # ===== VIRTUAL ENV =====
 echo "Checking virtual environment..."
 if [ ! -d ".venv" ]; then
-  # Проверяем наличие python3-venv
   if ! python3 -m venv --help >/dev/null 2>&1; then
-    echo "python3-venv is not installed. Installing..."
+    echo "python3-venv is missing. Installing..."
     sudo apt update
     sudo apt install -y python3-venv
   fi
-
   echo "Creating virtual environment..."
   $PYTHON_BIN -m venv .venv
 fi
