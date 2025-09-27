@@ -10,11 +10,11 @@ cd /opt/kinoliba
 ### Делаем скрипт исполняемым
 
 ```bash
-chmod +x deploy.sh
+sudo chmod +x deploy.sh
 ```
 
 ### Первый запуск и настройка
 
 ```bash
-./deploy.sh
+sudo ./deploy.sh
 ```
