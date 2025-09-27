@@ -41,6 +41,11 @@ if [ ! -f "$PASSPHRASE_FILE" ]; then
   done
 fi
 
+# ===== ENSURE PERMISSIONS =====
+# Делаем владельцем текущего пользователя
+sudo chown -R $(whoami):$(whoami) "$PROJECT_DIR/bot/data"
+chmod 600 "$PROJECT_DIR/bot/data/passphrase.txt" "$PROJECT_DIR/bot/data/token.txt"
+
 # ===== UPDATE CODE =====
 echo "Updating codebase from GitHub..."
 git pull origin production
@@ -76,8 +81,9 @@ After=network.target
 [Service]
 User=$USER
 WorkingDirectory=$PROJECT_DIR
-ExecStart=/opt/kinoliba/.venv/bin/python3 /opt/kinoliba/main.py
+ExecStart=$PROJECT_DIR/.venv/bin/python3 $PROJECT_DIR/main.py
 Restart=always
+Environment="PATH=$PROJECT_DIR/.venv/bin:/usr/bin:/bin"
 
 [Install]
 WantedBy=multi-user.target
