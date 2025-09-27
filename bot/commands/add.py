@@ -1,4 +1,3 @@
-import logging
 from aiogram.filters import Command
 from aiogram import Bot, types, Router
 from aiogram.fsm.context import FSMContext
@@ -14,7 +13,6 @@ from bot.conversation import create_message_founded
 
 from hubble.getters import get_search, get_info
 
-logger = logging.getLogger(__name__)
 router = Router()
 
 
@@ -22,14 +20,6 @@ router = Router()
 async def add(message: types.Message, state: FSMContext, bot: Bot):
     query = message.text[5:].strip()
     if not is_search_query_valid(query):
-        logger.info(
-            f"Setting state. Waiting for validquery.",
-            extra={
-                "command": "add",
-                "conversation_id": message.chat.id,
-                "query": query,
-            },
-        )
         await message.answer(get_random_what_you_wanna_add())
         await state.set_state(AddMovieState.waiting_for_query)
         return
@@ -43,14 +33,6 @@ async def handle_query(message: types.Message, state: FSMContext, bot: Bot):
         return
     query = message.text.strip()
     if not is_search_query_valid(query):
-        logger.warning(
-            f"Invalid search query: {query}",
-            extra={
-                "command": "add",
-                "conversation_id": message.chat.id,
-                "query": query,
-            },
-        )
         await message.answer(get_random_content_not_found())
         await state.clear()
         return

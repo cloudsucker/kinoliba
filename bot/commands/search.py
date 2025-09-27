@@ -18,8 +18,6 @@ from bot.conversation import get_random_what_you_wanna_search
 
 from hubble.getters import get_search, get_info
 
-from gemini import gemini_get_name_by_description
-
 router = Router()
 
 
@@ -105,14 +103,6 @@ async def handle_inline_query(inline_query: InlineQuery):
     movies: list = search_data.get("movies", [])
     results = []
 
-    if not match:
-        gemini_prediction = gemini_get_name_by_description(query)
-        if gemini_prediction:
-            search_data = await get_search(gemini_prediction)
-            match: dict = search_data.get("match", None)
-            movies: list = search_data.get("movies", [])
-            results = []
-
     if match:
         match_typename = match.get("typename")
         if match_typename != "person":
@@ -195,15 +185,8 @@ async def perform_search(query: str, message: types.Message):
     movies: list = search_data.get("movies", [])
 
     if not match:
-        gemini_prediction = gemini_get_name_by_description(query)
-        if gemini_prediction:
-            search_data = await get_search(gemini_prediction)
-            match: dict = search_data.get("match", None)
-            movies: list = search_data.get("movies", [])
-
-        if not match:
-            await message.answer(get_random_content_not_found())
-            return
+        await message.answer(get_random_content_not_found())
+        return
 
     match_typename = match.get("typename")
     if match_typename != "person":
