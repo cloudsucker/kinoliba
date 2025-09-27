@@ -76,7 +76,7 @@ After=network.target
 [Service]
 User=$USER
 WorkingDirectory=$PROJECT_DIR
-ExecStart=$PROJECT_DIR/.venv/bin/python3 -m bot
+ExecStart=/opt/kinoliba/.venv/bin/python3 /opt/kinoliba/main.py
 Restart=always
 
 [Install]
