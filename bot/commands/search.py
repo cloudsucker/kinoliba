@@ -23,16 +23,11 @@ router = Router()
 
 @router.message(default_state, lambda msg: msg.text and not msg.text.startswith("/"))
 async def handle_search_query(message: types.Message, state: FSMContext):
-    """
-    Обрабатывает любое сообщение как поисковый запрос, кроме команд.
-    """
     query = message.text.strip()
-
     if not is_search_query_valid(query):
         await message.answer(get_random_what_you_wanna_search())
         await state.set_state(SearchState.waiting_for_query)
         return
-
     await perform_search(query, message)
 
 

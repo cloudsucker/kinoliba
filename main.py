@@ -16,12 +16,12 @@ dp.message.middleware(PassphraseMiddleware())
 dp.include_router(start.router)
 dp.include_router(add.router)
 dp.include_router(delete.router)
-dp.include_router(search.router)
 dp.include_router(my_list.router)
 dp.include_router(viewed.router)
 dp.include_router(share.router)
 dp.include_router(dates.router)
 dp.include_router(help.router)
+dp.include_router(search.router)
 
 
 # MAIN
