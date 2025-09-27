@@ -48,6 +48,14 @@ git pull origin production
 # ===== VIRTUAL ENV =====
 echo "Checking virtual environment..."
 if [ ! -d ".venv" ]; then
+  # Проверяем наличие python3-venv
+  if ! python3 -m venv --help >/dev/null 2>&1; then
+    echo "python3-venv is not installed. Installing..."
+    sudo apt update
+    sudo apt install -y python3-venv
+  fi
+
+  echo "Creating virtual environment..."
   $PYTHON_BIN -m venv .venv
 fi
 
