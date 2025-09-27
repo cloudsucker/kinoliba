@@ -75,9 +75,8 @@ pip install -r requirements.txt
 deactivate
 
 # ===== SYSTEMD UNIT =====
-if [ ! -f "$SYSTEMD_FILE" ]; then
-  echo "Creating systemd unit..."
-  sudo tee $SYSTEMD_FILE > /dev/null <<EOL
+echo "Creating/Updating systemd unit..."
+sudo tee $SYSTEMD_FILE > /dev/null <<EOL
 [Unit]
 Description=Telegram Bot Kinoliba
 After=network.target
@@ -95,12 +94,8 @@ Environment="LC_ALL=ru_RU.UTF-8"
 WantedBy=multi-user.target
 EOL
 
-  sudo systemctl daemon-reload
-  sudo systemctl enable $APP_NAME
-  sudo systemctl start $APP_NAME
-else
-  echo "Restarting systemd unit..."
-  sudo systemctl restart $APP_NAME
-fi
+sudo systemctl daemon-reload
+sudo systemctl enable $APP_NAME
+sudo systemctl restart $APP_NAME
 
 echo "Bot deployment completed successfully!"
