@@ -78,7 +78,7 @@ After=network.target
 [Service]
 User=$USER
 WorkingDirectory=$PROJECT_DIR
-ExecStart=$PROJECT_DIR/.venv/bin/python3 $PROJECT_DIR/main.py
+ExecStart=$PROJECT_DIR/.venv/bin/python3 -m main
 Restart=always
 Environment="PATH=$PROJECT_DIR/.venv/bin:/usr/bin:/bin"
 
