@@ -7,3 +7,4 @@ bot/data/token.txt
 *.txt
 *.psd
 **/responses/
+!requirements.txt
