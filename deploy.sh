@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e
 
+# ===== GENERATE RUSSIAN LOCALE =====
+echo "Ensuring Russian locale is available..."
+sudo locale-gen ru_RU.UTF-8
+sudo update-locale LANG=ru_RU.UTF-8
+export LANG=ru_RU.UTF-8
+export LC_ALL=ru_RU.UTF-8
+
 # ===== VARIABLES =====
 APP_NAME="kinoliba"
 PROJECT_DIR="/opt/$APP_NAME"
@@ -81,6 +88,8 @@ WorkingDirectory=$PROJECT_DIR
 ExecStart=$PROJECT_DIR/.venv/bin/python3 /opt/kinoliba/main.py
 Restart=always
 Environment="PATH=$PROJECT_DIR/.venv/bin:/usr/bin:/bin"
+Environment="LANG=ru_RU.UTF-8"
+Environment="LC_ALL=ru_RU.UTF-8"
 
 [Install]
 WantedBy=multi-user.target

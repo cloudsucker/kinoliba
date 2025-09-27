@@ -10,11 +10,13 @@ cd /opt/kinoliba
 ### Делаем скрипт исполняемым
 
 ```bash
-sudo chmod +x deploy.sh
+# Меняем владельца папки на своего пользователя
+sudo chown -R $(whoami):$(whoami) /opt/kinoliba
+chmod +x deploy.sh
 ```
 
 ### Первый запуск и настройка
 
 ```bash
-sudo ./deploy.sh
+./deploy.sh
 ```
