@@ -10,7 +10,7 @@ from aiogram import Bot, Dispatcher
 
 from bot.data import get_token
 from bot.passphrase import PassphraseMiddleware
-from bot.commands import start, search, my_list, suggest, help, dates
+from bot.commands import start, search, my_list, suggest, help, dates, inline
 
 
 # LOGGER SETUP
@@ -50,6 +50,7 @@ dp.include_router(my_list.router)
 dp.include_router(suggest.router)  # before search: handles "🎲 Что посмотреть?" text
 dp.include_router(dates.router)
 dp.include_router(help.router)
+dp.include_router(inline.router)   # inline queries (@bot query)
 dp.include_router(search.router)   # free-text catch-all must be last
 logger.info("Routers added")
 
