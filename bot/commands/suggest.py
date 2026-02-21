@@ -116,7 +116,10 @@ async def _find_via_ai(bot, chat_id: int, state: FSMContext, ai_func, *args) -> 
         await bot.send_message(chat_id, "Не смог придумать... Попробуй ещё раз 😔")
         return
 
-    search_data = await get_search(title)
+    try:
+        search_data = await get_search(title)
+    except Exception:
+        search_data = {}
     match = search_data.get("match")
     alternatives = search_data.get("movies", [])
 

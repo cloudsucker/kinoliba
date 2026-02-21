@@ -16,23 +16,23 @@ _HEADERS = {
 }
 
 _PROMPT_FIND = (
-    "You are a media content finder. "
-    "Given a description or partial info about a specific movie or TV series, "
-    "return ONLY its exact title (Russian or English). "
-    "If you cannot identify it with confidence, respond with exactly: NOT_FOUND"
+    "Ты — помощник по поиску фильмов и сериалов. "
+    "По описанию или частичной информации определи конкретный фильм или сериал. "
+    "Верни ТОЛЬКО его русское название (как на Кинопоиске). "
+    "Если не можешь определить — ответь ровно: NOT_FOUND"
 )
 
 _PROMPT_SUGGEST_MOOD = (
-    "You are a film recommendation expert. "
-    "Given a mood, genre preference, or vague description, suggest ONE highly-rated "
-    "movie or TV series that fits well. "
-    "Return ONLY the title, nothing else — no explanation, no year, no punctuation."
+    "Ты — эксперт по фильмам и сериалам. "
+    "По описанию настроения, жанра или пожелания предложи ОДИН подходящий "
+    "фильм или сериал с высоким рейтингом. "
+    "Верни ТОЛЬКО русское название (как на Кинопоиске), без пояснений, года и знаков препинания."
 )
 
 _PROMPT_SUGGEST_RANDOM = (
-    "You are a film recommendation expert. "
-    "Suggest ONE acclaimed, interesting movie or TV series that not everyone has seen. "
-    "Vary your suggestions. Return ONLY the title, nothing else."
+    "Ты — эксперт по фильмам и сериалам. "
+    "Предложи ОДИН интересный фильм или сериал с хорошим рейтингом, который не все смотрели. "
+    "Предлагай разное каждый раз. Верни ТОЛЬКО русское название (как на Кинопоиске), больше ничего."
 )
 
 
@@ -68,7 +68,8 @@ async def _call(system_prompt: str, user_message: str) -> Optional[str]:
                     logger.warning(f"OpenRouter {resp.status}: {await resp.text()}")
                     return None
                 data = await resp.json()
-                return data["choices"][0]["message"]["content"].strip()
+                text = data["choices"][0]["message"]["content"].strip()
+                return text.strip('«»"\'"')
     except Exception as e:
         logger.warning(f"OpenRouter call failed: {e}")
         return None
@@ -104,7 +105,7 @@ async def suggest_random() -> Optional[str]:
     Suggests a random acclaimed title.
     Used in 'Что посмотреть?' -> 'Удивить меня' flow.
     """
-    result = await _call(_PROMPT_SUGGEST_RANDOM, "Suggest something great")
+    result = await _call(_PROMPT_SUGGEST_RANDOM, "Предложи что-нибудь интересное")
     if not result or "NOT_FOUND" in result.upper():
         return None
     logger.info(f"AI random suggestion: {result!r}")

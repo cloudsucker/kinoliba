@@ -14,10 +14,17 @@ from hubble.utils import (
 
 
 async def fetch_json(session: ClientSession, url: str, params: dict) -> dict:
+    import json as _json
     async with session.get(url, params=params) as resp:
         if resp.status != 200:
             return {}
-        return await resp.json(content_type=None)
+        body = await resp.text()
+        if not body or not body.strip():
+            return {}
+        try:
+            return _json.loads(body)
+        except _json.JSONDecodeError:
+            return {}
 
 
 async def get_search(search_query: str) -> dict:
