@@ -17,7 +17,7 @@ async def fetch_json(session: ClientSession, url: str, params: dict) -> dict:
     async with session.get(url, params=params) as resp:
         if resp.status != 200:
             return {}
-        return await resp.json()
+        return await resp.json(content_type=None)
 
 
 async def get_search(search_query: str) -> dict:

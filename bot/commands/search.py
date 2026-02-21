@@ -62,19 +62,29 @@ async def handle_search_query(message: types.Message, state: FSMContext):
     if not is_search_query_valid(query):
         return
 
-    search_data = await get_search(query)
+    try:
+        search_data = await get_search(query)
+    except Exception:
+        logger.exception("Search API error for query: %s", query)
+        await message.answer("Сервер поиска недоступен, попробуй позже.")
+        return
+
     match = search_data.get("match")
     alternatives = search_data.get("movies", [])
 
     if not match:
         prediction = await get_name_by_description(query)
         if prediction:
-            search_data = await get_search(prediction)
+            try:
+                search_data = await get_search(prediction)
+            except Exception:
+                search_data = {}
             match = search_data.get("match")
             alternatives = search_data.get("movies", [])
 
     if not match:
         await message.answer(get_random_content_not_found())
+        await state.clear()
         return
 
     content_data = await _fetch_full_info(match)

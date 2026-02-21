@@ -1,8 +1,7 @@
-import locale
 import datetime
 import re
 
-from aiogram import types, Router
+from aiogram import types, Router, F
 from aiogram.filters import Command
 
 from bot.data import get_user_lib
@@ -10,26 +9,16 @@ from hubble.getters import get_series_dates
 
 router = Router()
 
-# SET LOCALE FOR RUSSIAN MONTHS NAMING
-locale.setlocale(locale.LC_TIME, "Russian_Russia.1251")
 
-months_genitive = {
-    "январь": "января",
-    "февраль": "февраля",
-    "март": "марта",
-    "апрель": "апреля",
-    "май": "мая",
-    "июнь": "июня",
-    "июль": "июля",
-    "август": "августа",
-    "сентябрь": "сентября",
-    "октябрь": "октября",
-    "ноябрь": "ноября",
-    "декабрь": "декабря",
+MONTHS_BY_NUM = {
+    1: "января", 2: "февраля", 3: "марта", 4: "апреля",
+    5: "мая", 6: "июня", 7: "июля", 8: "августа",
+    9: "сентября", 10: "октября", 11: "ноября", 12: "декабря",
 }
 
 
 @router.message(Command("dates"))
+@router.message(F.text == "📅 Даты выхода")
 async def dates(message: types.Message):
     user_lib = get_user_lib(message.chat.id)
     user_tvseries: list[dict] = user_lib.get("tvseries", {})
@@ -101,13 +90,9 @@ async def dates(message: types.Message):
         new_episode_release_text = "дата неизвестна"
 
         if isinstance(raw_date, datetime.datetime):
-            if raw_date.month == 0 or raw_date.day == 0:
-                new_episode_release_text = f"{raw_date.year} год"
-            else:
-                day = raw_date.day
-                month = raw_date.strftime("%B")
-                month_genitive = months_genitive.get(month.lower(), month)
-                new_episode_release_text = f"{day} {month_genitive}"
+            day = raw_date.day
+            month_name = MONTHS_BY_NUM.get(raw_date.month, "")
+            new_episode_release_text = f"{day} {month_name}"
 
         elif isinstance(raw_date, str):
             if re.match(r"^\d{4}-00-00$", raw_date):
@@ -117,9 +102,8 @@ async def dates(message: types.Message):
                 try:
                     parsed = datetime.datetime.strptime(raw_date, "%Y-%m-%d")
                     day = parsed.day
-                    month = parsed.strftime("%B")
-                    month_genitive = months_genitive.get(month.lower(), month)
-                    new_episode_release_text = f"{day} {month_genitive}"
+                    month_name = MONTHS_BY_NUM.get(parsed.month, "")
+                    new_episode_release_text = f"{day} {month_name}"
                 except Exception:
                     pass
             elif re.match(r"^\d{4}$", raw_date):

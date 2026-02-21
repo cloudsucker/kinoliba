@@ -95,7 +95,7 @@ def get_user_lib(conversation_id: int, content_type: str = None) -> dict:
 
 
 def save_content_to_user_lib(conversation_id: int, content_data: dict) -> bool:
-    content_id = content_data.get("id")
+    content_id = str(content_data.get("id"))
     content_type = content_data.get("typename")
 
     if is_content_in_user_lib(conversation_id, content_type, content_id):
@@ -223,6 +223,7 @@ def mark_as_recommend(
     Перед вызовом проверить не отмечен ли контент как рекомендованный
     Если контент уже рекомендован - возвращает False.
     """
+    content_id = str(content_id)
 
     if not is_content_in_user_lib(conversation_id, content_type, content_id):
         return False
@@ -236,12 +237,13 @@ def mark_as_recommend(
 
     if recommend:
         current_content_type_user_data[content_id]["recommend"] = True
-    elif not recommend:
+    else:
         current_content_type_user_data[content_id]["recommend"] = False
 
     if user_review:
         current_content_type_user_data[content_id]["user_review"] = user_review
 
+    _save_user_file(conversation_id, user_data)
     return True
 
 

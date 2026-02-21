@@ -3,6 +3,7 @@
 **/__pycache__/
 bot/data/users/
 bot/data/token.txt
+bot/data/authorized_users.json
 *.bat
 *.txt
 *.psd
