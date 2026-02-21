@@ -8,12 +8,19 @@ USER_DATA_PATH = DATA_PATH + "users/"
 TOKEN_FILEPATH = DATA_PATH + "token.txt"
 CURRENT_USER_DATA_FILEPATH_TEMPLATE = USER_DATA_PATH + "{}.json"
 
+if not os.path.exists(USER_DATA_PATH):
+    os.mkdir(USER_DATA_PATH)
 
 # = = = = = = = = = = = = = = = = BOT_TOKEN GETTER = = = = = = = = = = = = = = = = =
 
 
 def get_token():
     with open(TOKEN_FILEPATH, "r") as file:
+        return file.read().strip()
+
+
+def get_passphrase():
+    with open(DATA_PATH + "passphrase.txt", "r") as file:
         return file.read().strip()
 
 
@@ -99,8 +106,7 @@ def update_content_in_user_lib(conversation_id: int, content_data: dict) -> bool
     content_type = content_data.get("typename")
 
     if not is_content_in_user_lib(conversation_id, content_type, content_id):
-        # TODO: добавить обработку с сообщением
-        print(f"content not in lib. id: {content_id}, type: {content_type}")
+        return
 
     user_data = _get_user_data(conversation_id)
     current_content_type_user_data = user_data.get(content_type, {})
@@ -184,9 +190,12 @@ def get_users_recommends(conversation_id: int) -> dict[str:list]:
 def is_this_content_already_recommend(
     conversation_id: int, content_type: str, content_id: int
 ) -> bool:
-    user_recommends = get_users_recommends(conversation_id).get(content_type, [])
-    if user_recommends:
-        return content_id in get_users_recommends(conversation_id).get(content_type)
+    user_recommends = get_users_recommends(conversation_id)
+    if not user_recommends:
+        return False
+    user_current_content_type_recommends = user_recommends.get(content_type, [])
+    if user_current_content_type_recommends:
+        return content_id in user_recommends.get(content_type)
     return False
 
 
