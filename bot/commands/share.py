@@ -34,7 +34,7 @@ async def my_list(message: types.Message):
         _pre_title = film.get("title_russian", film.get("title_original"))
         title = f"{_pre_title}, {year} г. {"(" + genres + ")" if genres else ''}"
 
-        media_group.append(InputMediaPhoto(media=film.get("poster_url"), caption=title))
+        media_group.append(InputMediaPhoto(media=film.get("kinopoisk_poster_url") or film.get("poster_url"), caption=title))
 
     for tvseries in recommended_tvseries:
         year = tvseries.get("release_start", "")
@@ -47,7 +47,7 @@ async def my_list(message: types.Message):
         title = f"{_pre_title}, {year} г. {"(" + genres + ")" if genres else ''}"
 
         media_group.append(
-            InputMediaPhoto(media=tvseries.get("poster_url"), caption=title)
+            InputMediaPhoto(media=tvseries.get("kinopoisk_poster_url") or tvseries.get("poster_url"), caption=title)
         )
 
     counter = 0

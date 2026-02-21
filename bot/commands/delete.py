@@ -11,7 +11,7 @@ from bot.conversation import is_it_yes, create_message_founded
 from bot.conversation import get_random_what_you_wanna_delete
 from bot.conversation import get_random_content_not_found
 
-from hubble.getters import get_search, get_info
+from hubble.getters import get_search, get_info, enrich_with_watch_url
 
 router = Router()
 
@@ -55,6 +55,7 @@ async def process_delete_query(
         match_info = await get_info(match_typename, match.get("id"))
         match.update(match_info)
 
+    match = await enrich_with_watch_url(match)
     answer_data = create_message_founded(match)
     bot_message_answer = answer_data.get("message")
     bot_image_answer = answer_data.get("image")

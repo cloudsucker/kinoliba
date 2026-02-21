@@ -12,7 +12,7 @@ from bot.conversation import get_random_not_found_in_list_response
 from bot.conversation import get_random_recommendation_response
 from bot.helpers import is_search_query_valid
 
-from hubble.getters import get_search, get_info
+from hubble.getters import get_search, get_info, enrich_with_watch_url
 
 
 router = Router()
@@ -54,6 +54,7 @@ async def handle_movie_selection(callback: types.CallbackQuery, state: FSMContex
     conversation_id = callback.message.chat.id
 
     match_info = await get_info(movie_type, movie_id)
+    match_info = await enrich_with_watch_url(match_info)
 
     if is_this_content_already_recommend(conversation_id, movie_type, movie_id):
         await callback.message.answer("Вы его уже отмечали)")
@@ -117,6 +118,7 @@ async def process_query(
         match_info = await get_info(content_type, content_id)
         match.update(match_info)
 
+    match = await enrich_with_watch_url(match)
     answer_data: dict = create_message_founded(match)
     bot_message_answer = answer_data.get("message", None)
     bot_image_answer = answer_data.get("image", None)

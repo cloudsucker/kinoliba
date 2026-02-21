@@ -12,7 +12,7 @@ from bot.conversation import get_random_content_not_found
 from bot.conversation import get_random_what_you_wanna_add
 from bot.conversation import create_message_founded
 
-from hubble.getters import get_search, get_info
+from hubble.getters import get_search, get_info, enrich_with_watch_url
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -63,6 +63,7 @@ async def handle_movie_selection(callback: types.CallbackQuery, state: FSMContex
     movie_type = callback.data.split("_")[3]
     conversation_id = callback.message.chat.id
     match_info = await get_info(movie_type, movie_id)
+    match_info = await enrich_with_watch_url(match_info)
     answer_data = create_message_founded(match_info)
     bot_message_answer = answer_data.get("message", None)
     bot_image_answer = answer_data.get("image", None)
@@ -151,6 +152,7 @@ async def process_query(
     if match_typename != "person":
         match_info = await get_info(match_typename, match.get("id"))
         match.update(match_info)
+    match = await enrich_with_watch_url(match)
     answer_data: dict = create_message_founded(match)
     bot_message_answer = answer_data.get("message", None)
     bot_image_answer = answer_data.get("image", None)

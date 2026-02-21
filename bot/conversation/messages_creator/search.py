@@ -93,8 +93,11 @@ def _create_message_content_founded(content_data: Dict) -> Dict:
         duration = format_duration(content_data.get("duration_series", ""))
 
     # POSTER, URL, LOCALIZATION FOR TYPENAME
-    poster_url = content_data.get("poster_url", None)
-    url = content_data.get("url")
+    # kinopoisk_poster_url — новое имя поля (переименовано в бэке), poster_url — обратная совместимость с сохранёнными данными
+    poster_url = content_data.get("kinopoisk_poster_url") or content_data.get("poster_url")
+    watch_url = content_data.get("watch_url")
+    url = watch_url or content_data.get("url")
+    url_label = "🎬 <b>Смотреть:</b>" if watch_url else "🔗 <b>Ссылка:</b>"
     typename = get_locale_en_ru(typename)
 
     message = "\n\n".join(
@@ -137,7 +140,7 @@ def _create_message_content_founded(content_data: Dict) -> Dict:
                 ),
                 f"📝 <b>Описание:</b> {description}" if description else "",
                 f"🎭 <b>Актёры:</b> {actors}" if actors else "",
-                f"🔗 <b>Ссылка:</b> {url}",
+                f"{url_label} {url}",
             ],
         )
     )

@@ -16,7 +16,7 @@ from bot.conversation import create_message_founded
 from bot.conversation import get_random_content_not_found
 from bot.conversation import get_random_what_you_wanna_search
 
-from hubble.getters import get_search, get_info
+from hubble.getters import get_search, get_info, enrich_with_watch_url
 
 from gemini import gemini_get_name_by_description
 
@@ -63,6 +63,7 @@ async def handle_movie_selection(callback: types.CallbackQuery):
     movie_type = callback.data.split("_")[3]
 
     match_info = await get_info(movie_type, movie_id)
+    match_info = await enrich_with_watch_url(match_info)
     answer_data = create_message_founded(match_info)
     bot_message_answer = answer_data.get("message", None)
     bot_image_answer = answer_data.get("image", None)
@@ -119,6 +120,7 @@ async def handle_inline_query(inline_query: InlineQuery):
             match_info = await get_info(match_typename, match.get("id"))
             match.update(match_info)
 
+        match = await enrich_with_watch_url(match)
         answer_data = create_message_founded(match)
         message_text = answer_data.get("message", "")
         image_url = answer_data.get("image", None)
@@ -155,6 +157,7 @@ async def handle_inline_query(inline_query: InlineQuery):
         year = movie.get("production_year") or movie.get("release_start", "N/A")
         content_type = "Сериал" if movie.get("typename") == "tvseries" else "Фильм"
         movie_info = await get_info(movie.get("typename"), movie.get("id"))
+        movie_info = await enrich_with_watch_url(movie_info)
         answer_data = create_message_founded(movie_info)
         message_text = answer_data.get("message", "")
         image_url = answer_data.get("image", None)
@@ -210,6 +213,7 @@ async def perform_search(query: str, message: types.Message):
         match_info = await get_info(match_typename, match.get("id"))
         match.update(match_info)
 
+    match = await enrich_with_watch_url(match)
     answer_data: dict = create_message_founded(match)
     bot_message_answer = answer_data.get("message", None)
     bot_image_answer = answer_data.get("image", None)
