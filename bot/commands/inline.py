@@ -5,10 +5,10 @@ from aiogram import Router
 from aiogram.types import (
     InlineQuery,
     InlineQueryResultArticle,
+    InlineQueryResultPhoto,
     InputTextMessageContent,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
-    LinkPreviewOptions,
 )
 
 from bot.conversation import create_message_founded
@@ -21,57 +21,62 @@ MAX_RESULTS = 10
 MIN_QUERY_LEN = 2
 
 
-def _poster_url(data: dict) -> str | None:
+def _poster_urls(data: dict) -> tuple[str | None, str | None]:
+    """Returns (full_url, thumbnail_url) for the poster."""
     url = data.get("kinopoisk_poster_url") or data.get("poster_url")
-    if url:
-        return url.replace("/orig/", "/360/")
-    return None
+    if not url:
+        return None, None
+    thumb = url.replace("/orig/", "/360/")
+    return url, thumb
 
 
-def _build_article(data: dict) -> InlineQueryResultArticle | None:
+def _watch_keyboard(data: dict) -> InlineKeyboardMarkup | None:
+    watch_url = data.get("watch_url")
+    if not watch_url:
+        return None
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="▶️ Смотреть", url=watch_url)]]
+    )
+
+
+def _build_result(data: dict):
+    """Build InlineQueryResultPhoto (with poster) or Article (without)."""
     content_id = str(data.get("id", ""))
     typename = data.get("typename", "")
     if not content_id or not typename:
         return None
 
     answer = create_message_founded(data)
-    text = (answer.get("message") or "")[:4096]
-    if not text:
+    caption = (answer.get("message") or "")[:1024]
+    if not caption:
         return None
 
     title = data.get("title_russian") or data.get("title_original") or data.get("name") or "?"
-    year = data.get("production_year") or data.get("release_start")
-    description = f"{year}" if year else None
+    result_id = f"{typename}:{content_id}"
+    keyboard = _watch_keyboard(data)
+    photo_url, thumb_url = _poster_urls(data)
 
-    # URL-only keyboard (callback buttons don't work in inline mode with FSM)
-    buttons = []
-    watch_url = data.get("watch_url")
-    if watch_url:
-        buttons.append([InlineKeyboardButton(text="▶️ Смотреть", url=watch_url)])
-
-    reply_markup = InlineKeyboardMarkup(inline_keyboard=buttons) if buttons else None
-
-    # Use poster as link preview image above the message text
-    poster = _poster_url(data)
-    link_preview = None
-    if poster:
-        link_preview = LinkPreviewOptions(
-            url=poster,
-            prefer_large_media=True,
-            show_above_text=True,
+    if photo_url:
+        return InlineQueryResultPhoto(
+            id=result_id,
+            photo_url=photo_url,
+            thumbnail_url=thumb_url,
+            title=title,
+            caption=caption,
+            parse_mode="HTML",
+            show_caption_above_media=False,
+            reply_markup=keyboard,
         )
 
+    # No poster — fall back to text article
     return InlineQueryResultArticle(
-        id=f"{typename}:{content_id}",
+        id=result_id,
         title=title,
-        description=description,
-        thumbnail_url=poster,
         input_message_content=InputTextMessageContent(
-            message_text=text,
+            message_text=caption,
             parse_mode="HTML",
-            link_preview_options=link_preview,
         ),
-        reply_markup=reply_markup,
+        reply_markup=keyboard,
     )
 
 
@@ -121,13 +126,13 @@ async def handle_inline_query(inline_query: InlineQuery):
         return_exceptions=True,
     )
 
-    # Build article list
-    articles = []
+    # Build result list
+    results = []
     for result in enriched:
         if isinstance(result, Exception) or not result:
             continue
-        article = _build_article(result)
-        if article:
-            articles.append(article)
+        item = _build_result(result)
+        if item:
+            results.append(item)
 
-    await inline_query.answer(articles, cache_time=30)
+    await inline_query.answer(results, cache_time=30)
