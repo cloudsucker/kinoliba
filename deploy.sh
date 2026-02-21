@@ -10,12 +10,18 @@ export LC_ALL=ru_RU.UTF-8
 
 # ===== VARIABLES =====
 APP_NAME="kinoliba"
-PROJECT_DIR="/opt/$APP_NAME"
+PROJECT_DIR="$HOME/$APP_NAME"
 PYTHON_BIN="/usr/bin/python3"
 SYSTEMD_FILE="/etc/systemd/system/$APP_NAME.service"
 ENV_FILE="$PROJECT_DIR/.env"
 
 cd "$PROJECT_DIR"
+
+# ===== STOP SERVICE IF RUNNING (redeploy) =====
+if systemctl is-active --quiet "$APP_NAME" 2>/dev/null; then
+  echo "Stopping running $APP_NAME service..."
+  sudo systemctl stop "$APP_NAME"
+fi
 
 # ===== CHECK .ENV =====
 if [ ! -f "$ENV_FILE" ]; then
