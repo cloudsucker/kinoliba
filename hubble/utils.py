@@ -1,4 +1,6 @@
-BASE_URL = "http://127.0.0.1:8080/"
+import os
+
+BASE_URL = os.getenv("HUBBLE_URL", "http://127.0.0.1:8080/")
 
 SEARCH_URL = BASE_URL + "search"
 INFO_URL = BASE_URL + "info"

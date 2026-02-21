@@ -5,7 +5,6 @@ import json
 
 DATA_PATH = "bot/data/"
 USER_DATA_PATH = DATA_PATH + "users/"
-TOKEN_FILEPATH = DATA_PATH + "token.txt"
 CURRENT_USER_DATA_FILEPATH_TEMPLATE = USER_DATA_PATH + "{}.json"
 
 if not os.path.exists(USER_DATA_PATH):
@@ -14,14 +13,27 @@ if not os.path.exists(USER_DATA_PATH):
 # = = = = = = = = = = = = = = = = BOT_TOKEN GETTER = = = = = = = = = = = = = = = = =
 
 
-def get_token():
-    with open(TOKEN_FILEPATH, "r") as file:
-        return file.read().strip()
+def get_token() -> str:
+    value = os.getenv("BOT_TOKEN")
+    if value:
+        return value
+    # Fallback: legacy file (for existing installs without .env)
+    path = DATA_PATH + "token.txt"
+    if os.path.exists(path):
+        with open(path, "r") as f:
+            return f.read().strip()
+    raise RuntimeError("BOT_TOKEN not set. Add it to .env or bot/data/token.txt")
 
 
-def get_passphrase():
-    with open(DATA_PATH + "passphrase.txt", "r") as file:
-        return file.read().strip()
+def get_passphrase() -> str:
+    value = os.getenv("BOT_PASSPHRASE")
+    if value:
+        return value
+    path = DATA_PATH + "passphrase.txt"
+    if os.path.exists(path):
+        with open(path, "r") as f:
+            return f.read().strip()
+    raise RuntimeError("BOT_PASSPHRASE not set. Add it to .env or bot/data/passphrase.txt")
 
 
 # = = = = = = = = = = = = = = = USER_DATA MANAGE = = = = = = = = = = = = = = = =
@@ -233,12 +245,63 @@ def mark_as_recommend(
     return True
 
 
-# = = = = = = = = = = = = = = = = RECOMMENDATIONS = = = = = = = = = = = = = = = =
+# = = = = = = = = = = = = = = = = LIBRARY FILTERING = = = = = = = = = = = = = = = =
 
 
-def import_recomendations(conversation_id: int, new_content: list) -> bool:
-    if not new_content or not all(isinstance(content, dict) for content in new_content):
+def get_filtered_lib(conversation_id: int, filter_key: str = "all") -> list:
+    """
+    Returns a flat sorted list of library items matching the given filter.
+    filter_key: "all" | "film" | "tv" | "seen" | "unseen" | "rec"
+    Each item dict has "typename" and "id" ensured from the JSON structure.
+    """
+    user_data = _get_user_data(conversation_id)
+    items = []
+
+    for ctype in ("film", "tvseries"):
+        for cid, item in user_data.get(ctype, {}).items():
+            item = dict(item)
+            item["typename"] = ctype
+            item["id"] = cid
+            items.append(item)
+
+    if filter_key == "film":
+        items = [i for i in items if i["typename"] == "film"]
+    elif filter_key == "tv":
+        items = [i for i in items if i["typename"] == "tvseries"]
+    elif filter_key == "seen":
+        items = [i for i in items if i.get("viewed", False)]
+    elif filter_key == "unseen":
+        items = [i for i in items if not i.get("viewed", False)]
+    elif filter_key == "rec":
+        items = [i for i in items if i.get("recommend") is True]
+
+    items.sort(
+        key=lambda x: (x.get("title_russian") or x.get("title_original", "")).lower()
+    )
+    return items
+
+
+def mark_viewed_only(conversation_id: int, content_type: str, content_id: int) -> bool:
+    """Marks content as viewed without touching the recommend flag."""
+    content_id = str(content_id)
+    if not is_content_in_user_lib(conversation_id, content_type, content_id):
         return False
-    for content in new_content:
-        save_content_to_user_lib(conversation_id, content)
+
+    user_data = _get_user_data(conversation_id)
+    user_data.setdefault(content_type, {})[content_id]["viewed"] = True
+    _save_user_file(conversation_id, user_data)
+    return True
+
+
+def set_recommend_status(
+    conversation_id: int, content_type: str, content_id: int, recommend: bool
+) -> bool:
+    """Sets the recommend flag (True / False) on an existing library item."""
+    content_id = str(content_id)
+    if not is_content_in_user_lib(conversation_id, content_type, content_id):
+        return False
+
+    user_data = _get_user_data(conversation_id)
+    user_data.setdefault(content_type, {})[content_id]["recommend"] = recommend
+    _save_user_file(conversation_id, user_data)
     return True

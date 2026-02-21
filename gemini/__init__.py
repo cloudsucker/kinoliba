@@ -1,1 +1,0 @@
-from gemini.ask import gemini_get_name_by_description

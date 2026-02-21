@@ -13,44 +13,43 @@ APP_NAME="kinoliba"
 PROJECT_DIR="/opt/$APP_NAME"
 PYTHON_BIN="/usr/bin/python3"
 SYSTEMD_FILE="/etc/systemd/system/$APP_NAME.service"
-TOKEN_FILE="$PROJECT_DIR/bot/data/token.txt"
-PASSPHRASE_FILE="$PROJECT_DIR/bot/data/passphrase.txt"
+ENV_FILE="$PROJECT_DIR/.env"
 
 cd "$PROJECT_DIR"
 
-# ===== CHECK TOKEN =====
-if [ ! -f "$TOKEN_FILE" ]; then
-  echo "Token file not found!"
-  mkdir -p "$(dirname "$TOKEN_FILE")"
-  read -p "Please enter your BotFather token: " BOT_TOKEN
-  echo "$BOT_TOKEN" > "$TOKEN_FILE"
-  chmod 600 "$TOKEN_FILE"
-  echo "Token saved to $TOKEN_FILE"
-fi
+# ===== CHECK .ENV =====
+if [ ! -f "$ENV_FILE" ]; then
+  echo ".env not found — creating from .env.example..."
+  cp "$PROJECT_DIR/.env.example" "$ENV_FILE"
+  chmod 600 "$ENV_FILE"
 
-# ===== CHECK PASSPHRASE =====
-if [ ! -f "$PASSPHRASE_FILE" ]; then
-  echo "Passphrase file not found!"
-  mkdir -p "$(dirname "$PASSPHRASE_FILE")"
-  
+  read -p "Enter your BotFather token: " BOT_TOKEN
+  sed -i "s|BOT_TOKEN=.*|BOT_TOKEN=$BOT_TOKEN|" "$ENV_FILE"
+
   while true; do
-    read -p "Please enter a passphrase for the bot: " PASS1
-    read -p "Confirm passphrase: " PASS2
+    read -sp "Enter bot passphrase: " PASS1; echo
+    read -sp "Confirm passphrase:   " PASS2; echo
     if [ "$PASS1" = "$PASS2" ] && [ -n "$PASS1" ]; then
-      echo "$PASS1" > "$PASSPHRASE_FILE"
-      chmod 600 "$PASSPHRASE_FILE"
-      echo "Passphrase saved to $PASSPHRASE_FILE"
+      sed -i "s|BOT_PASSPHRASE=.*|BOT_PASSPHRASE=$PASS1|" "$ENV_FILE"
       break
     else
-      echo "Passphrases do not match or are empty. Please try again."
+      echo "Passphrases do not match or are empty. Try again."
     fi
   done
+
+  read -p "OpenRouter API key (leave empty to skip AI features): " OR_KEY
+  if [ -n "$OR_KEY" ]; then
+    sed -i "s|OPENROUTER_API_KEY=.*|OPENROUTER_API_KEY=$OR_KEY|" "$ENV_FILE"
+  fi
+
+  echo ".env saved at $ENV_FILE"
+else
+  echo ".env already exists — skipping interactive setup."
 fi
 
-# ===== ENSURE OWNERSHIP =====
-# Все файлы бота принадлежат текущему пользователю
-chown -R $(whoami):$(whoami) "$PROJECT_DIR/bot"
-chmod 700 "$PROJECT_DIR/bot/data"
+# ===== ENSURE PERMISSIONS =====
+chown -R "$(whoami)":"$(whoami)" "$PROJECT_DIR"
+chmod 600 "$ENV_FILE"
 
 # ===== UPDATE CODE =====
 echo "Updating codebase from GitHub..."
@@ -75,8 +74,8 @@ pip install -r requirements.txt
 deactivate
 
 # ===== SYSTEMD UNIT =====
-echo "Creating/Updating systemd unit..."
-sudo tee $SYSTEMD_FILE > /dev/null <<EOL
+echo "Creating/updating systemd unit..."
+sudo tee "$SYSTEMD_FILE" > /dev/null <<EOL
 [Unit]
 Description=Telegram Bot Kinoliba
 After=network.target
@@ -84,8 +83,9 @@ After=network.target
 [Service]
 User=$USER
 WorkingDirectory=$PROJECT_DIR
-ExecStart=$PROJECT_DIR/.venv/bin/python3 /opt/kinoliba/main.py
+ExecStart=$PROJECT_DIR/.venv/bin/python3 $PROJECT_DIR/main.py
 Restart=always
+EnvironmentFile=$ENV_FILE
 Environment="PATH=$PROJECT_DIR/.venv/bin:/usr/bin:/bin"
 Environment="LANG=ru_RU.UTF-8"
 Environment="LC_ALL=ru_RU.UTF-8"
@@ -95,7 +95,7 @@ WantedBy=multi-user.target
 EOL
 
 sudo systemctl daemon-reload
-sudo systemctl enable $APP_NAME
-sudo systemctl restart $APP_NAME
+sudo systemctl enable "$APP_NAME"
+sudo systemctl restart "$APP_NAME"
 
-echo "Bot deployment completed successfully!"
+echo "Deployment complete!"

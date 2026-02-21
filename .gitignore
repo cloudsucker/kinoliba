@@ -8,3 +8,5 @@ bot/data/token.txt
 *.psd
 **/responses/
 !requirements.txt
+.env
+*.log
