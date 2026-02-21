@@ -8,6 +8,7 @@ from aiogram.types import (
     InputTextMessageContent,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
+    LinkPreviewOptions,
 )
 
 from bot.conversation import create_message_founded
@@ -47,20 +48,28 @@ def _build_article(data: dict) -> InlineQueryResultArticle | None:
     watch_url = data.get("watch_url")
     if watch_url:
         buttons.append([InlineKeyboardButton(text="▶️ Смотреть", url=watch_url)])
-    kinopoisk_url = data.get("url")
-    if kinopoisk_url:
-        buttons.append([InlineKeyboardButton(text="🔗 Кинопоиск", url=kinopoisk_url)])
 
     reply_markup = InlineKeyboardMarkup(inline_keyboard=buttons) if buttons else None
+
+    # Use poster as link preview image above the message text
+    poster = _poster_url(data)
+    link_preview = None
+    if poster:
+        link_preview = LinkPreviewOptions(
+            url=poster,
+            prefer_large_media=True,
+            show_above_text=True,
+        )
 
     return InlineQueryResultArticle(
         id=f"{typename}:{content_id}",
         title=title,
         description=description,
-        thumbnail_url=_poster_url(data),
+        thumbnail_url=poster,
         input_message_content=InputTextMessageContent(
             message_text=text,
             parse_mode="HTML",
+            link_preview_options=link_preview,
         ),
         reply_markup=reply_markup,
     )
@@ -106,30 +115,18 @@ async def handle_inline_query(inline_query: InlineQuery):
             seen.add(key)
             unique.append(item)
 
-    # Top match: full info + watch URL
-    top = await _fetch_full_info(unique[0])
-
-    # Alternatives: fetch info in parallel, no lordfilm enrichment
-    rest = unique[1:MAX_RESULTS]
-    if rest:
-        rest_infos = await asyncio.gather(
-            *(get_info(it["typename"], it["id"]) for it in rest),
-            return_exceptions=True,
-        )
-    else:
-        rest_infos = []
+    # Fetch full info + watch URL for ALL results in parallel
+    enriched = await asyncio.gather(
+        *(_fetch_full_info(it) for it in unique[:MAX_RESULTS]),
+        return_exceptions=True,
+    )
 
     # Build article list
     articles = []
-    top_article = _build_article(top)
-    if top_article:
-        articles.append(top_article)
-
-    for item, info in zip(rest, rest_infos):
-        if isinstance(info, Exception) or not info:
+    for result in enriched:
+        if isinstance(result, Exception) or not result:
             continue
-        merged = {**item, **info}
-        article = _build_article(merged)
+        article = _build_article(result)
         if article:
             articles.append(article)
 
